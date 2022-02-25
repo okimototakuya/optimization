@@ -3,58 +3,37 @@ sys.path.append('../distribution/src/sampling')
 sys.path.append('../distribution/src/density-function/main')
 import numpy as np
 import sampling
+import gauss
 
 n = 0   # 観測データの個数
 d = 0   # GMMの次元数
-
-#def l_func(x, w, mu, sig):
-#    '''
-#    尤度関数
-#
-#    Note
-#    -----
-#    - 仮定した分布
-#    - 最適化対象の対数尤度
-#
-#    Input
-#    -----
-#    x: numpy.ndarray
-#        尤度関数の引数 (確率変数の値)
-#
-#    Return
-#    -----
-#    phi: numpy.ndarray
-#        尤度関数の値 (確率値)
-#    '''
-#    m = len(w)  # 多峰分布の峰の個数
-#    phi = [w[i]*np.exp((x-mu[i])**2/(2*sig[i]**2)) for i in range(m)]
-#    return phi
 
 def phi(x, mu, sig):
     '''
     GMMについて、各峰のガウス分布の密度関数を返す。
     '''
-    return (1/(2*np.pi*sig**2)) * np.exp(-(x-mu)**2/(2*sig**2))
+    #return (1/(2*np.pi*sig**2)) * np.exp(-(x-mu)**2/(2*sig**2))
+    return gauss.gauss(x, mu, sig)
 
-def target_func(x_observed, *theta):
-    '''
-    目的関数
-
-    Notes
-    -----
-    - 応用的に最適化の対象となる関数(目的関数)
-      ^ 例1. 混合ガウスモデルの対数尤度
-      ^ 例2. ↑より一般的に、不完全なデータ
-    '''
-    w, mu, sig = theta[0], theta[1], theta[2]
-    m = len(w)  # 多峰分布の峰の個数
-    n = len(x_observed) # 観測データの個数
-    # GMMの対数尤度
-    # -----
-    # ↓損失について、平均をとらずに単に合計している。
-    log_likelihood = sum([np.log(sum([w[l]*phi(x_observed[i], mu[l], sig[l]) for l in range(m)]))   \
-                            for i in range(n)])
-    return log_likelihood
+#def target_func(x_observed, *theta):
+#    '''
+#    目的関数
+#
+#    Notes
+#    -----
+#    - 応用的に最適化の対象となる関数(目的関数)
+#      ^ 例1. 混合ガウスモデルの対数尤度
+#      ^ 例2. ↑より一般的に、不完全なデータ
+#    '''
+#    w, mu, sig = theta[0], theta[1], theta[2]
+#    m = len(w)  # 多峰分布の峰の個数
+#    n = len(x_observed) # 観測データの個数
+#    # GMMの対数尤度
+#    # -----
+#    # ↓損失について、平均をとらずに単に合計している。
+#    log_likelihood = sum([np.log(sum([w[l]*phi(x_observed[i], mu[l], sig[l]) for l in range(m)]))   \
+#                            for i in range(n)])
+#    return log_likelihood
 
 def e_step(x, *theta):
     '''
