@@ -34,7 +34,7 @@ def phi(x, mu, sig):
     '''
     GMMについて、各峰のガウス分布の密度関数を返す。
     '''
-    return np.exp((x-mu)**2/(2*sig**2))
+    return (1/(2*np.pi*sig**2)) * np.exp(-(x-mu)**2/(2*sig**2))
 
 def target_func(x_observed, *theta):
     '''
@@ -79,13 +79,10 @@ def e_step(x, *theta):
     global n
     m = len(w)                      # 多峰分布の峰の個数
     eta = [[0 for _ in range(m)] for _ in range(n)]     # 媒介変数
-    #for l in range(m):  # 分布の峰の数だけ繰り返し
-        #eta[l] = w[l]*l_func(x, mu[l], sig[l]) / \
-        #        sum([w[l_]*l_func(x, mu[l_], sig[l_]) for l_ in range(m)])
     for i in range(n):
         for l in range(m):
-            eta[i][l] = w[l]*phi(x[i], mu[l], sig[l]) / \
-                    sum([w[l_]*phi(x[i], mu[l_], sig[l_]) for l_ in range(m)])
+            eta[i][l] = (w[l]*phi(x[i], mu[l], sig[l]**2)) / \
+                    sum([w[l_]*phi(x[i], mu[l_], sig[l_]**2) for l_ in range(m)])
     return eta
 
 def m_step(x, eta):
@@ -119,7 +116,7 @@ def m_step(x, eta):
         mu[l] = sum([eta[i][l]*x[i] for i in range(n)]) /   \
                 sum([eta[i_][l] for i_ in range(n)])
         sig[l] = np.sqrt(sum([eta[i][l]*np.square(x[i]-mu[l]) for i in range(n)]) /   \
-                d*sum(eta[i_][l] for i_ in range(n))) # FIXME: 2022.2.24: 変数dの正体が不明
+                (d*sum(eta[i_][l] for i_ in range(n)))) # FIXME: 2022.2.24: 変数dの正体が不明
     return w, mu, sig
 
 def main():
@@ -148,8 +145,8 @@ def main():
     # GMMの対数尤度の最適化では、パラメータ(最適化の各ステップで更新される変数)は
     # θ=(w_1,...,w_n, mu_1^T,...,mu_n^T, sig_1,...,sig_n)
     #x = [[-5, 5]]      # GMMのパラメータの推定という目的では、用いない。
-    w = [9/10, 1/10]    # GMMのパラメータ: w, mu, sig
-    mu = [-3, 3]
+    w = [7/10, 3/10]    # GMMのパラメータ: w, mu, sig
+    mu = [-1, 6]
     #sig = [7/10, 11/10]
     sig = [1, 1]
     # 反復回数
