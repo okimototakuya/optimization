@@ -5,8 +5,9 @@ import numpy as np
 import sampling
 import gauss
 
-n = 0   # 観測データの個数
-d = 0   # GMMの次元数
+n = 0           # 観測データの個数
+d = 0           # GMMの次元数
+x_observed = [] # 観測データの値
 
 def phi(x, mu, sig):
     '''
@@ -35,7 +36,7 @@ def phi(x, mu, sig):
 #                            for i in range(n)])
 #    return log_likelihood
 
-def e_step(x, *theta):
+def e_step(*theta):
     '''
     EMアルゴリズムのEステップ
 
@@ -55,16 +56,17 @@ def e_step(x, *theta):
         媒介変数
     '''
     w, mu, sig = theta[0], theta[1], theta[2]
-    global n
-    m = len(w)                      # 多峰分布の峰の個数
+    global n, x_observed
+    m = len(w)                                          # 多峰分布の峰の個数
     eta = [[0 for _ in range(m)] for _ in range(n)]     # 媒介変数
+    x = x_observed                                      # 観測データの値
     for i in range(n):
         for l in range(m):
             eta[i][l] = (w[l]*phi(x[i], mu[l], sig[l]**2)) / \
                     sum([w[l_]*phi(x[i], mu[l_], sig[l_]**2) for l_ in range(m)])
     return eta
 
-def m_step(x, eta):
+def m_step(eta):
     '''
     EMアルゴリズムのMステップ
 
@@ -85,7 +87,8 @@ def m_step(x, eta):
     - w, mu, sig: tuple
         解
     '''
-    global n, d
+    global n, d, x_observed
+    x = x_observed                  # 観測データの値
     m = len(eta[0])                 # 多峰分布の峰の個数
     w  = [0 for _ in range(m)]      # 重みパラメータ
     mu = [0 for _ in range(m)]      # 期待値
@@ -114,10 +117,10 @@ def main():
     # 2022.2.25: samplingモジュール内で、乱数のシードを固定できる仕様にしてもいいかも。
     sampling.sample_size = 100
     sampling.sample_mixed_gauss(mu=[0, 5], sigma=[1, 1], rate=[4/5, 1/5])   # 真の分布
-    x_observed = sampling.sample_list
-    global n, d
-    n = len(x_observed)
-    d = 1
+    global x_observed, n, d
+    x_observed = sampling.sample_list   # 観測データの値
+    n = len(x_observed)                 # 観測データの個数
+    d = 1                               # GMMの次元数
     # 初期値
     # 2022.2.25注
     # -----
@@ -131,8 +134,8 @@ def main():
     # 反復回数
     n_iter = 1000
     for i in range(n_iter): # FIXME: 2022.2.24: xの更新は、いつされるのか?
-        eta = e_step(x_observed, w, mu, sig)
-        w, mu, sig = m_step(x_observed, eta)
+        eta = e_step(w, mu, sig)
+        w, mu, sig = m_step(eta)
         print('{i}ステップ目: [w, mu, sig]=[{w}, {mu}, {sig}]'.format(i=i, w=w, mu=mu, sig=sig))
 
 if __name__ == '__main__':
