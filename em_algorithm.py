@@ -5,9 +5,49 @@ import numpy as np
 import sampling
 import gauss
 
-n = 0           # 観測データの個数
-d = 0           # GMMの次元数
-x_observed = [] # 観測データの値
+
+class observed():
+    '''
+    em_algorithmモジュールの、グローバル変数
+
+    Notes
+    -----
+    - 観測データについての設定
+
+    Usage
+    -----
+    - 本モジュールのグローバル変数設定
+      ^ 本モジュールmain関数呼出によるもの
+        → ユーザによる、本クラスインスタンス生成は不要
+        → グローバルなスコープでインスタンスを生成し、値をグローバル変数に代入した。
+      ^ 別モジュールからのグローバル変数設定
+        → 本インスタンスを生成し、(必要に応じて)別モジュール内でグローバル化
+    '''
+    def __init__(self):
+        # 観測点
+        # -----
+        # 真の分布(GMM。自作のsamplingモジュールで定義。)に基づいて、観測点を生成。
+        # 2022.2.25: samplingモジュール内で、乱数のシードを固定できる仕様にしてもいいかも。
+        sampling.sample_size = 100
+        sampling.sample_mixed_gauss(mu=[0, 5], sigma=[1, 1], rate=[4/5, 1/5])   # 真の分布
+        # グローバル変数
+        # -----
+        self.__x_observed = sampling.sample_list    # 観測データの値
+        self.__n = len(self.__x_observed)           # 観測データの個数
+        self.__d = 1                                # GMMの次元数
+
+    @property
+    def observed(self):
+        '''
+        ゲッター
+        '''
+        # 観測データの個数
+        # GMMの次元数
+        # 観測データの値
+        return self.__x_observed, self.__n, self.__d
+
+
+x_observed, n, d = observed().observed    # グローバル変数の設定
 
 def phi(x, mu, sig):
     '''
@@ -109,18 +149,12 @@ def main():
     -----
     - 応用的に最適化の対象となる関数(目的関数)
       ^ 例1. 混合ガウスモデルの対数尤度
+      ^^ 応用例. 確率分布推定に基づくクラスタリング
+      ^^ 関連1. 階層的クラスタリング (クラスター分析)
+      ^^ 関連2. 非階層的クラスタリング (k平均法 (k-means clustering))
+      ^^ https://datachemeng.com/gaussianmixturemodel/
       ^ 例2. ↑より一般的に、不完全なデータ
     '''
-    # 観測点
-    # -----
-    # 真の分布(GMM。自作のsamplingモジュールで定義。)に基づいて、観測点を生成。
-    # 2022.2.25: samplingモジュール内で、乱数のシードを固定できる仕様にしてもいいかも。
-    sampling.sample_size = 100
-    sampling.sample_mixed_gauss(mu=[0, 5], sigma=[1, 1], rate=[4/5, 1/5])   # 真の分布
-    global x_observed, n, d
-    x_observed = sampling.sample_list   # 観測データの値
-    n = len(x_observed)                 # 観測データの個数
-    d = 1                               # GMMの次元数
     # 初期値
     # 2022.2.25注
     # -----
@@ -129,7 +163,6 @@ def main():
     #x = [[-5, 5]]      # GMMのパラメータの推定という目的では、用いない。
     w = [7/10, 3/10]    # GMMのパラメータ: w, mu, sig
     mu = [-1, 6]
-    #sig = [7/10, 11/10]
     sig = [1, 1]
     # 反復回数
     n_iter = 1000
