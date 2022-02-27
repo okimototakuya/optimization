@@ -1,5 +1,12 @@
+import sys
+sys.path.append('../distribution/src/density-function/main/')
+import gauss
 import numpy as np
 from matplotlib import pyplot as plt
+
+N = 1000                        # 観測データの個数
+#x_observed = np.random.randn(N) # 観測データ
+x_observed = np.random.normal(5, 1, N) # 観測データ
 
 def target_func(x):
     '''
@@ -7,16 +14,22 @@ def target_func(x):
     '''
     #y = x ** 2  # 関数A
     #y = x ** 3  # 関数B
-    y = (1/3)*x**3 - 2*x**2 + 3*x # 関数C
+    #y = (1/3)*x**3 - 2*x**2 + 3*x # 関数C
+    mu = x
+    y = (1/N) * sum([np.log(gauss.gauss(x_observed[i], mu, 1)) for i in range(N)])
     return y
 
-def influence_func(x):
+def gradient(x):
     '''
     影響関数 (目的関数の微分)
     '''
     #y = 2 * x   # 関数A
     #y = 3 * x ** 2  # 関数B
-    y = x**2 - 4*x + 3  # 関数C
+    #y = x**2 - 4*x + 3  # 関数C
+    mu = x
+    y = (1/N) * sum([(1/np.exp(((mu-x_observed[i])**2)/2) *  \
+            (-(mu-x_observed[i])) * \
+            np.exp(-(mu-x_observed[i])**2/2)) for i in range(N)])
     return y
 
 def main():
@@ -34,7 +47,7 @@ def main():
     x_init = -2             # 初期値
     x_pred = [x_init if i == 0 else 0 for i in range(max_iteration)]    # 予測値のリスト
     for i in range(max_iteration-1):
-        x_pred[i+1] = x_pred[i] + learning_rate * influence_func(x_pred[i])
+        x_pred[i+1] = x_pred[i] + learning_rate * gradient(x_pred[i])
         print(i, x_pred[i])
     x_pred = np.array(x_pred)         # numpy.ndarray型配列にキャスト
 
