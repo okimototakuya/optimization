@@ -138,7 +138,7 @@ def m_step(eta):
         mu[l] = sum([eta[i][l]*x[i] for i in range(n)]) /   \
                 sum([eta[i_][l] for i_ in range(n)])
         sig[l] = np.sqrt(sum([eta[i][l]*np.square(x[i]-mu[l]) for i in range(n)]) /   \
-                (d*sum(eta[i_][l] for i_ in range(n)))) # FIXME: 2022.2.24: 変数dの正体が不明
+                (d*sum(eta[i_][l] for i_ in range(n))))
     return w, mu, sig
 
 def main():
@@ -161,12 +161,17 @@ def main():
     # GMMの対数尤度の最適化では、パラメータ(最適化の各ステップで更新される変数)は
     # θ=(w_1,...,w_n, mu_1^T,...,mu_n^T, sig_1,...,sig_n)
     #x = [[-5, 5]]      # GMMのパラメータの推定という目的では、用いない。
-    w = [7/10, 3/10]    # GMMのパラメータ: w, mu, sig
+    # 組み込みサンプルデータ
+    w = [7/10, 3/10]    # 初期値 (GMMのパラメータ: w, mu, sig)
     mu = [-1, 6]
     sig = [1, 1]
+    ## urbanGB
+    #w = [1/2, 1/2]    # 初期値 (GMMのパラメータ: w, mu, sig)
+    #mu = [[-3, 56], [-2, 53]]
+    #sig = [1, 1]
     # 反復回数
     n_iter = 1000
-    for i in range(n_iter): # FIXME: 2022.2.24: xの更新は、いつされるのか?
+    for i in range(n_iter):
         eta = e_step(w, mu, sig)
         w, mu, sig = m_step(eta)
         print('{i}ステップ目: [w, mu, sig]=[{w}, {mu}, {sig}]'.format(i=i, w=w, mu=mu, sig=sig))
