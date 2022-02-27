@@ -1,6 +1,6 @@
 import sys
-sys.path.append('../distribution/src/sampling')
-sys.path.append('../distribution/src/density-function/main')
+sys.path.append('../../distribution/src/sampling')
+sys.path.append('../../distribution/src/density-function/main')
 import numpy as np
 import sampling
 import gauss
