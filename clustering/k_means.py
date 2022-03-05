@@ -17,9 +17,10 @@ def k_means(cluster_num, observed_data, max_iter):
     - max_iter: int型
         最大反復回数
     '''
-    feature_dim = len(observed_data[0])                                 # 特徴量の次元
-    centroids = [[np.random.uniform()*10 for _ in range(feature_dim)] for _ in range(cluster_num)]  # 重心の初期値
-    which_cluster = np.zeros(len(observed_data), dtype='int64')         # 各観測データの所属クラスタ
+    feature_dim = len(observed_data[0])                                                                 # 特徴量の次元
+    #centroids = [[np.random.uniform()*10 for _ in range(feature_dim)] for _ in range(cluster_num)]     # 重心の初期値: ランダム入力
+    centroids = [[5, 3, 1.5, 0.3], [6, 3, 5, 2], [7, 3, 6, 2]]                                          # 重心の初期値: 手入力
+    which_cluster = np.zeros(len(observed_data), dtype='int64')                                         # 各観測データの所属クラスタ
     for _ in range(max_iter):
         for i in range(len(observed_data)):
             div = [np.sqrt(sum(np.square(observed_data[i] - centroids[j]))) for j in range(cluster_num)] # L2ノルム
@@ -42,11 +43,8 @@ def main():
         data = iris.data,               # 各観測データの値 (座標) : 各特徴量の値
         columns = iris.feature_names    # 各観測データのクラスタ値: 各特徴量の名称
         )
-    cluster = k_means(3, df_iris.values, 1000)
-    cluster = sorted(cluster)
+    cluster = k_means(3, df_iris.values, 2000)
     print('クラスタ値: {cluster}'.format(cluster=cluster[::]))
-    #print('正解率: {correct_rate}'.format(correct_rate= \
-    #        sum([1 if cluster[i] == iris.target[i] else 0  for i in range(len(iris.data))]) / len(iris.data)))
     print('正解率: {correct_rate}'.format(correct_rate= \
             sum([1 if val_cluster == iris.target[i] else 0 for i, val_cluster in enumerate(cluster)]) / len(iris.data)))
 
