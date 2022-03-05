@@ -11,25 +11,47 @@ x_observed = np.random.normal(5, 1, N) # 観測データ
 def target_func(x):
     '''
     目的関数
+
+    Notes
+    -----
+    - 関数A
+        # 極値x=0
+    - 関数B
+        # 極値なし
+        # 初期値, 学習率いずれを調整しても収束しない。
+            → OverflowError
+            → 極値がある場合と異なり、微分係数が0に収束しないことに由来する。
+    - 関数C
+        # 極値x=1, 3
+    - 関数D
+        # ガウシアンモデル(最小二乗法)を、勾配降下法で解く。
+        # log(ab)=log(a)+log(b) → 二乗和の足し合わせ(sum)で表現できる。
+        # 1/Nを掛けることで、二乗損失の算術平均になる。
     '''
-    #y = x ** 2  # 関数A
-    #y = x ** 3  # 関数B
-    #y = (1/3)*x**3 - 2*x**2 + 3*x # 関数C
-    mu = x
+
+    #y = x ** 2                     # 関数A
+    #y = x ** 3                     # 関数B
+    #y = (1/3)*x**3 - 2*x**2 + 3*x  # 関数C
+    mu = x                          # 関数D
     y = (1/N) * sum([np.log(gauss.gauss(x_observed[i], mu, 1)) for i in range(N)])
     return y
 
 def gradient(x):
     '''
     影響関数 (目的関数の微分)
+
+    Notes
+    -----
+    - 2022.3.5: HACK: 式(D-2)が正しいように思えるが、上手くいかない。
     '''
-    #y = 2 * x   # 関数A
-    #y = 3 * x ** 2  # 関数B
-    #y = x**2 - 4*x + 3  # 関数C
-    mu = x
+    #y = 2 * x              # 関数A
+    #y = 3 * x ** 2         # 関数B
+    #y = x**2 - 4*x + 3     # 関数C
+    mu = x                  # 関数D
     y = (1/N) * sum([(1/np.exp(((mu-x_observed[i])**2)/2) *  \
             (-(mu-x_observed[i])) * \
             np.exp(-(mu-x_observed[i])**2/2)) for i in range(N)])
+    #y = -1 * sum([(mu-x_observed[i]) for i in range(N)])   ... (D-2)
     return y
 
 def main():
@@ -44,7 +66,7 @@ def main():
     '''
     learning_rate = 0.1     # 学習率
     max_iteration = 1000    # 最大反復回数
-    x_init = -2             # 初期値
+    x_init = 4             # 初期値
     x_pred = [x_init if i == 0 else 0 for i in range(max_iteration)]    # 予測値のリスト
     for i in range(max_iteration-1):
         x_pred[i+1] = x_pred[i] + learning_rate * gradient(x_pred[i])
@@ -80,6 +102,7 @@ def main():
 
     # グラフを表示する。
     fig.tight_layout()
+    plt.grid()
     plt.show()
     plt.close()
     # -------------------------------------------------------------------
